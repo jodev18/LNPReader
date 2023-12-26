@@ -1,16 +1,15 @@
 package com.jojo.lnpreader;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.DialogInterface;
 import android.os.Bundle;
-import android.util.Log;
-import android.webkit.ValueCallback;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.jojo.lnpreader.utils.PrefHelper;
 
@@ -24,6 +23,8 @@ public class ContentViewerActivity extends AppCompatActivity {
 
     private static final String DEFAULT_URL = "https://www.lightnovelpub.com" +
             "/novel/lord-of-the-mysteries-275/chapter-1-16091324";
+    private static final String DEFAULT_URL_SEASON_2 = "https://www.lightnovelpub.com/novel/" +
+            "circle-of-inevitability-1513/chapter-1-29061420";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,17 +40,58 @@ public class ContentViewerActivity extends AppCompatActivity {
 
         wvContent.setWebViewClient(new MyWebViewClient());
 
+        loadWebViewContent();
+
+    }
+
+    private void loadWebViewContent(){
+
         String savedURL = pf.getSavedURL();
 
         if(savedURL == null){
-            // If there's no saved URL, start with chapter 1.
-            wvContent.loadUrl(DEFAULT_URL);
-            setTitle("LOTM Chapter " + getChapNumber(DEFAULT_URL));
+            showListDialog();
         }
         else{
             wvContent.loadUrl(savedURL);
             setTitle("LOTM Chapter " + getChapNumber(savedURL));
         }
+    }
+
+    private void showListDialog() {
+        final String[] options = {"Season 1", "Season 2"};
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Choose which season to start");
+
+        // Set items in a list
+        builder.setItems(options, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                // Handle the click on the selected item
+                String selectedOption = options[i];
+                // Perform actions based on the selected option
+                // For example, you can use a switch statement for different options
+                switch (i) {
+                    case 0:
+                        // If there's no saved URL, start with chapter 1.
+                        wvContent.loadUrl(DEFAULT_URL);
+                        setTitle("LOTM Chapter " + getChapNumber(DEFAULT_URL));
+                        break;
+                    case 1:
+                        // If there's no saved URL, start with chapter 1. Season 2.
+                        wvContent.loadUrl(DEFAULT_URL_SEASON_2);
+                        setTitle("LOTM Chapter " + getChapNumber(DEFAULT_URL_SEASON_2));
+                        break;
+                }
+            }
+        });
+
+        // We wanna make sure the user makes a choice
+        builder.setCancelable(false);
+
+        // Create and show the AlertDialog
+        AlertDialog dialog = builder.create();
+        dialog.show();
     }
 
     private String getChapNumber(String url){
