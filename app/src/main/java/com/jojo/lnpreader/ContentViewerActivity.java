@@ -3,7 +3,10 @@ package com.jojo.lnpreader;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Context;
 import android.content.DialogInterface;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
@@ -17,9 +20,10 @@ public class ContentViewerActivity extends AppCompatActivity {
 
     WebView wvContent;
     PrefHelper pf;
-
     ProgressBar prg;
     TextView tvLoad;
+
+    AlertDialog dgNoNetwork;
 
     private static final String DEFAULT_URL = "https://www.lightnovelpub.com" +
             "/novel/lord-of-the-mysteries-275/chapter-1-16091324";
@@ -38,9 +42,25 @@ public class ContentViewerActivity extends AppCompatActivity {
         wvContent = findViewById(R.id.wvContentTest);
         wvContent.getSettings().setJavaScriptEnabled(true);
 
-        wvContent.setWebViewClient(new MyWebViewClient());
+        if(isNetworkAvailable()){
+            wvContent.setWebViewClient(new MyWebViewClient());
+            loadWebViewContent();
+        }
+        else{
+            showNoNetworkDialog();
+        }
 
-        loadWebViewContent();
+    }
+
+    private void showNoNetworkDialog(){
+
+        AlertDialog.Builder noNetwork = new AlertDialog.Builder(this);
+
+        noNetwork.setTitle("No network");
+        noNetwork.setMessage("No network connection. Please enable data or wifi.");
+
+        this.dgNoNetwork = noNetwork.create();
+        this.dgNoNetwork.show();
 
     }
 
@@ -55,6 +75,15 @@ public class ContentViewerActivity extends AppCompatActivity {
             wvContent.loadUrl(savedURL);
             setTitle("LOTM Chapter " + getChapNumber(savedURL));
         }
+    }
+
+    private boolean isNetworkAvailable() {
+        ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        if (connectivityManager != null) {
+            NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+            return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+        }
+        return false;
     }
 
     private void showListDialog() {
@@ -115,20 +144,6 @@ public class ContentViewerActivity extends AppCompatActivity {
         }
     }
 
-    @Override
-    protected void onStop() {
-//        Log.d("URL",wvContent.getUrl());
-        pf.saveCurrentURL(wvContent.getUrl());
-        super.onStop();
-    }
-
-    @Override
-    protected void onDestroy() {
-//        Log.d("URL",wvContent.getUrl());
-        pf.saveCurrentURL(wvContent.getUrl());
-        super.onDestroy();
-    }
-
     private class MyWebViewClient extends WebViewClient {
 
         @Override
@@ -173,7 +188,22 @@ public class ContentViewerActivity extends AppCompatActivity {
         public void onReceivedError(WebView view, WebResourceRequest request, android.webkit.WebResourceError error) {
             // This method is called if there is an error during loading.
             // You can handle the error and take appropriate actions.
+
         }
+    }
+
+    @Override
+    protected void onStop() {
+//        Log.d("URL",wvContent.getUrl());
+        pf.saveCurrentURL(wvContent.getUrl());
+        super.onStop();
+    }
+
+    @Override
+    protected void onDestroy() {
+//        Log.d("URL",wvContent.getUrl());
+        pf.saveCurrentURL(wvContent.getUrl());
+        super.onDestroy();
     }
 
 }
